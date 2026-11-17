@@ -1,0 +1,462 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #285963;
+  color: #EBEBC3;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+}
+
+.app-layout {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Shared Sidebar Base --- */
+.sidebar {
+  width: 260px;
+  height: 100%;
+  background-color: #285963;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.sidebar-left {
+  border-right: 1px solid #6E9795;
+  box-shadow: 4px 0 16px rgba(15, 35, 40, 0.35);
+}
+
+.sidebar-right {
+  width: 280px;
+  border-left: 1px solid #6E9795;
+  box-shadow: -4px 0 16px rgba(15, 35, 40, 0.35);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 4px;
+}
+
+.sidebar-header h2,
+.logs-title-wrap h2 {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #EBEBC3;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #EBEBC3;
+  box-shadow: 0 0 8px #EBEBC3;
+}
+
+/* Navigation Buttons */
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-btn {
+  width: 100%;
+  text-align: left;
+  padding: 11px 14px;
+  background-color: rgba(61, 131, 142, 0.35);
+  border: 1px solid #6E9795;
+  border-radius: 6px;
+  color: #ADC7C6;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+  background-color: #3D838E;
+  border-color: #ADC7C6;
+  color: #EBEBC3;
+}
+
+.nav-btn.active {
+  background-color: #3D838E;
+  border-color: #EBEBC3;
+  color: #EBEBC3;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.sidebar-divider {
+  height: 1px;
+  background-color: #6E9795;
+  opacity: 0.5;
+}
+
+/* Real Time Status Section */
+.rt-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #ADC7C6;
+}
+
+.rt-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.rt-box {
+  background-color: rgba(61, 131, 142, 0.3);
+  border: 1px solid #6E9795;
+  border-radius: 6px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  user-select: none;
+}
+
+.rt-box:hover {
+  background-color: rgba(61, 131, 142, 0.55);
+  border-color: #ADC7C6;
+}
+
+.rt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rt-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #EBEBC3;
+  letter-spacing: 0.4px;
+}
+
+.rt-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ADC7C6;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.rt-indicator.on {
+  background-color: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+}
+
+.rt-indicator.off {
+  background-color: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+.rt-value {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #ADC7C6;
+}
+
+/* --- Left Sidebar Footer ("Wakey Wakey") --- */
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(110, 151, 149, 0.5);
+}
+
+.wakey-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: #EBEBC3;
+  border: 1px solid #EBEBC3;
+  border-radius: 6px;
+  color: #285963;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(15, 35, 40, 0.35);
+  transition: all 0.2s ease;
+}
+
+.wakey-btn:hover {
+  background-color: #ADC7C6;
+  border-color: #EBEBC3;
+  color: #285963;
+  transform: translateY(-1px);
+}
+
+.wakey-btn:active {
+  transform: translateY(1px);
+}
+
+/* --- Right Sidebar: Activity Logs --- */
+.logs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 4px;
+}
+
+.logs-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-count {
+  background-color: #3D838E;
+  border: 1px solid #ADC7C6;
+  color: #EBEBC3;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.clear-logs-btn {
+  background-color: rgba(61, 131, 142, 0.35);
+  border: 1px solid #6E9795;
+  color: #ADC7C6;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-logs-btn:hover {
+  background-color: #3D838E;
+  border-color: #EBEBC3;
+  color: #EBEBC3;
+}
+
+.logs-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+
+.logs-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.logs-list::-webkit-scrollbar-track {
+  background: rgba(40, 89, 99, 0.4);
+}
+
+.logs-list::-webkit-scrollbar-thumb {
+  background: #6E9795;
+  border-radius: 4px;
+}
+
+.log-entry {
+  background-color: rgba(61, 131, 142, 0.28);
+  border: 1px solid #6E9795;
+  border-left-width: 3px;
+  border-radius: 5px;
+  padding: 9px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: fadeInLog 0.2s ease;
+}
+
+.log-entry.type-on {
+  border-left-color: #22c55e;
+}
+
+.log-entry.type-off {
+  border-left-color: #ef4444;
+}
+
+.log-entry.type-sys {
+  border-left-color: #EBEBC3;
+}
+
+.log-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #ADC7C6;
+}
+
+.log-badge {
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.type-on .log-badge {
+  color: #22c55e;
+}
+
+.type-off .log-badge {
+  color: #ef4444;
+}
+
+.type-sys .log-badge {
+  color: #EBEBC3;
+}
+
+.log-message {
+  font-size: 12px;
+  color: #EBEBC3;
+  line-height: 1.35;
+}
+
+.logs-empty {
+  text-align: center;
+  color: #ADC7C6;
+  font-size: 12px;
+  margin-top: 24px;
+  opacity: 0.75;
+}
+
+@keyframes fadeInLog {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Main 3D Viewport --- */
+.viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+#canvas-container {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#labels-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Floating Room/Sensor Tags */
+.floating-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: rgba(40, 89, 99, 0.9);
+  border: 1px solid #ADC7C6;
+  color: #EBEBC3;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(20, 45, 50, 0.45);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.floating-label.sensor {
+  font-size: 10px;
+  padding: 4px 9px;
+  background: rgba(40, 89, 99, 0.94);
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.15s ease, border-color 0.2s ease;
+}
+
+.floating-label.sensor:hover {
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.floating-label.sensor.state-on {
+  border-color: #22c55e;
+  color: #EBEBC3;
+}
+
+.floating-label.sensor.state-off {
+  border-color: #ef4444;
+  color: #EBEBC3;
+}
+
+.label-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.state-on .label-dot {
+  background-color: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+.state-off .label-dot {
+  background-color: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+.controls-hint {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(40, 89, 99, 0.88);
+  border: 1px solid #6E9795;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: #ADC7C6;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.controls-hint strong {
+  color: #EBEBC3;
+}

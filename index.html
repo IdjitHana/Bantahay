@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bantahay</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Import Map for Three.js -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Left Sidebar -->
+    <aside class="sidebar sidebar-left">
+      <div class="sidebar-header">
+        <span class="status-dot"></span>
+        <h2>SPATIAL MONITOR</h2>
+      </div>
+
+      <!-- Navigation Buttons -->
+      <nav class="nav-menu">
+        <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
+        <button class="nav-btn" data-tab="settings">Settings</button>
+        <button class="nav-btn" data-tab="controls">Controls</button>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+
+      <!-- Real Time Status Section -->
+      <div class="rt-section">
+        <h3 class="section-title">Real Time Status</h3>
+        <div class="rt-grid">
+          <div class="rt-box" data-sensor="humidity">
+            <div class="rt-header">
+              <span class="rt-name">RT1 · HUM</span>
+              <span class="rt-indicator on" id="rt-dot-humidity"></span>
+            </div>
+            <div class="rt-value" id="rt-val-humidity">ON</div>
+          </div>
+
+          <div class="rt-box" data-sensor="gas">
+            <div class="rt-header">
+              <span class="rt-name">RT2 · GAS</span>
+              <span class="rt-indicator on" id="rt-dot-gas"></span>
+            </div>
+            <div class="rt-value" id="rt-val-gas">ON</div>
+          </div>
+
+          <div class="rt-box" data-sensor="proximity">
+            <div class="rt-header">
+              <span class="rt-name">RT3 · PROX</span>
+              <span class="rt-indicator off" id="rt-dot-proximity"></span>
+            </div>
+            <div class="rt-value" id="rt-val-proximity">OFF</div>
+          </div>
+
+          <div class="rt-box">
+            <div class="rt-header">
+              <span class="rt-name">RT4 · SYS</span>
+              <span class="rt-indicator on"></span>
+            </div>
+            <div class="rt-value">ACTIVE</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Action Button -->
+      <div class="sidebar-footer">
+        <button class="wakey-btn" id="wakey-btn">Wakey Wakey</button>
+      </div>
+    </aside>
+
+    <!-- Main 3D Viewport -->
+    <main class="viewport">
+      <div id="canvas-container"></div>
+
+      <!-- Floating 2D HUD / Labels Layer -->
+      <div id="labels-container"></div>
+
+      <div class="controls-hint">
+        <strong>Click Sensor:</strong> Toggle ON/OFF &nbsp;|&nbsp;
+        <strong>Left Drag:</strong> Rotate &nbsp;|&nbsp;
+        <strong>Right Drag:</strong> Pan &nbsp;|&nbsp;
+        <strong>Scroll:</strong> Zoom
+      </div>
+    </main>
+
+    <!-- Right Sidebar (Saved Logs) -->
+    <aside class="sidebar sidebar-right">
+      <div class="logs-header">
+        <div class="logs-title-wrap">
+          <h2>ACTIVITY LOGS</h2>
+          <span class="log-count" id="log-count">0</span>
+        </div>
+        <button class="clear-logs-btn" id="clear-logs-btn" title="Clear saved logs">Clear</button>
+      </div>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="logs-list" id="logs-list"></div>
+    </aside>
+  </div>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>
