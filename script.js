@@ -94,12 +94,10 @@ function addLog(badge, message, type = 'sys') {
     timestamp: Date.now()
   };
 
-  // Instant local UI update
   savedLogs.unshift(newLog);
   if (savedLogs.length > 100) savedLogs.pop();
   renderLogs();
 
-  // Background sync to Firebase
   push(logsRef, newLog).catch((err) => {
     console.error("Failed to sync log to Firebase:", err);
   });
@@ -110,7 +108,6 @@ onValue(logsRef, (snapshot) => {
   const raw = snapshot.val();
   if (raw) {
     const cloudLogs = Object.values(raw).sort((a, b) => b.timestamp - a.timestamp).slice(0, 100);
-    // Only update if cloud has logs to prevent overwriting local instant additions
     if (cloudLogs.length > 0) {
       savedLogs = cloudLogs;
       renderLogs();
@@ -135,7 +132,6 @@ navButtons.forEach((btn) => {
   });
 });
 
-// Initial render
 renderLogs();
 
 // ==========================================
@@ -146,7 +142,7 @@ const labelsContainer = document.getElementById('labels-container');
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(PALETTE.deepTeal);
-scene.fog = new THREE.FogExp2(PALETTE.deepTeal, 0.02);
+scene.fog = new THREE.FogExp2(PALETTE.deepTeal, 0.018);
 
 const camera = new THREE.PerspectiveCamera(
   45,
@@ -154,7 +150,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.set(11, 11, 13);
+camera.position.set(14, 13, 16);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(container.clientWidth, container.clientHeight);
@@ -167,7 +163,7 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.minDistance = 4;
-controls.maxDistance = 50;
+controls.maxDistance = 60;
 controls.minPolarAngle = 0;
 controls.maxPolarAngle = Math.PI;
 controls.target.set(0, 2.5, 0);
@@ -177,25 +173,29 @@ const ambientLight = new THREE.AmbientLight(PALETTE.cream, 0.75);
 scene.add(ambientLight);
 
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-dirLight.position.set(10, 20, 12);
+dirLight.position.set(12, 22, 14);
 dirLight.castShadow = true;
 scene.add(dirLight);
 
-const accentLight = new THREE.PointLight(PALETTE.cream, 1.2, 14);
+const accentLight = new THREE.PointLight(PALETTE.cream, 1.2, 18);
 accentLight.position.set(0, 4.2, 0);
 scene.add(accentLight);
 
 // Ground Reference Grid
-const gridHelper = new THREE.GridHelper(30, 30, PALETTE.sageTeal, PALETTE.oceanTeal);
+const gridHelper = new THREE.GridHelper(36, 36, PALETTE.sageTeal, PALETTE.oceanTeal);
 scene.add(gridHelper);
 
 // ==========================================
-// 4. BUILD THE 5x5x5 OPEN-ROOF BOX
+// 4. BUILD THE 8x8 SLOPED-WALL ROOM (5m to 4m) + 2m OPEN DOOR ON ONE SIDE
 // ==========================================
-const BOX_WIDTH = 5;
-const BOX_HEIGHT = 5;
-const BOX_LENGTH = 5;
+const ROOM_SIZE = 8;
+const HEIGHT_LEFT = 5;
+const HEIGHT_RIGHT = 4;
 const WALL_THICKNESS = 0.2;
+
+const DOOR_WIDTH = 2.0;
+const DOOR_HEIGHT = 2.2;
+const DOOR_THICKNESS = 0.08;
 
 const roomGroup = new THREE.Group();
 
@@ -211,65 +211,116 @@ const wallMat = new THREE.MeshStandardMaterial({
   metalness: 0.05
 });
 
+const doorMat = new THREE.MeshStandardMaterial({
+  color: PALETTE.mist,
+  roughness: 0.65,
+  metalness: 0.08
+});
+
 const edgeMat = new THREE.LineBasicMaterial({ color: PALETTE.mist });
 
-function createArchitecturalBlock(w, h, d, x, y, z, material) {
-  const geo = new THREE.BoxGeometry(w, h, d);
-  const mesh = new THREE.Mesh(geo, material);
+function addMeshWithEdges(geometry, material, x = 0, y = 0, z = 0, parent = roomGroup) {
+  const mesh = new THREE.Mesh(geometry, material);
   mesh.position.set(x, y, z);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
 
-  const edges = new THREE.EdgesGeometry(geo);
+  const edges = new THREE.EdgesGeometry(geometry);
   const line = new THREE.LineSegments(edges, edgeMat);
   mesh.add(line);
 
-  roomGroup.add(mesh);
+  parent.add(mesh);
   return mesh;
 }
 
-// Floor (5 x 0.2 x 5)
-createArchitecturalBlock(BOX_WIDTH, WALL_THICKNESS, BOX_LENGTH, 0, WALL_THICKNESS / 2, 0, floorMat);
-
-// Left & Right Walls
-createArchitecturalBlock(
-  WALL_THICKNESS,
-  BOX_HEIGHT,
-  BOX_LENGTH,
-  -BOX_WIDTH / 2 + WALL_THICKNESS / 2,
-  BOX_HEIGHT / 2,
+// 1. Floor (8m x 0.2m x 8m)
+addMeshWithEdges(
+  new THREE.BoxGeometry(ROOM_SIZE, WALL_THICKNESS, ROOM_SIZE),
+  floorMat,
   0,
-  wallMat
-);
-createArchitecturalBlock(
-  WALL_THICKNESS,
-  BOX_HEIGHT,
-  BOX_LENGTH,
-  BOX_WIDTH / 2 - WALL_THICKNESS / 2,
-  BOX_HEIGHT / 2,
-  0,
-  wallMat
+  WALL_THICKNESS / 2,
+  0
 );
 
-// Front & Back Walls
-createArchitecturalBlock(
-  BOX_WIDTH - WALL_THICKNESS * 2,
-  BOX_HEIGHT,
-  WALL_THICKNESS,
-  0,
-  BOX_HEIGHT / 2,
-  -BOX_LENGTH / 2 + WALL_THICKNESS / 2,
-  wallMat
+// 2. Left Wall (Height = 5m)
+addMeshWithEdges(
+  new THREE.BoxGeometry(WALL_THICKNESS, HEIGHT_LEFT, ROOM_SIZE),
+  wallMat,
+  -ROOM_SIZE / 2 + WALL_THICKNESS / 2,
+  HEIGHT_LEFT / 2,
+  0
 );
-createArchitecturalBlock(
-  BOX_WIDTH - WALL_THICKNESS * 2,
-  BOX_HEIGHT,
-  WALL_THICKNESS,
-  0,
-  BOX_HEIGHT / 2,
-  BOX_LENGTH / 2 - WALL_THICKNESS / 2,
-  wallMat
+
+// 3. Right Wall (Height = 4m)
+addMeshWithEdges(
+  new THREE.BoxGeometry(WALL_THICKNESS, HEIGHT_RIGHT, ROOM_SIZE),
+  wallMat,
+  ROOM_SIZE / 2 - WALL_THICKNESS / 2,
+  HEIGHT_RIGHT / 2,
+  0
 );
+
+// 4. Front & Back Sloped Walls (5m -> 4m)
+const innerWidth = ROOM_SIZE - WALL_THICKNESS * 2;
+const halfInner = innerWidth / 2;
+
+// Solid sloped wall shape (for Back Wall)
+const solidSlopedWallShape = new THREE.Shape();
+solidSlopedWallShape.moveTo(-halfInner, 0);
+solidSlopedWallShape.lineTo(halfInner, 0);
+solidSlopedWallShape.lineTo(halfInner, HEIGHT_RIGHT);
+solidSlopedWallShape.lineTo(-halfInner, HEIGHT_LEFT);
+solidSlopedWallShape.closePath();
+
+const solidSlopedWallGeo = new THREE.ExtrudeGeometry(solidSlopedWallShape, {
+  depth: WALL_THICKNESS,
+  bevelEnabled: false
+});
+
+// Back Wall (-Z) — Solid (no doorway)
+const backWallZ = -ROOM_SIZE / 2;
+addMeshWithEdges(solidSlopedWallGeo, wallMat, 0, 0, backWallZ);
+
+// Sloped wall shape WITH a 2m doorway opening on the 5m wall side (left side)
+const doorWallShape = new THREE.Shape();
+doorWallShape.moveTo(-halfInner, 0);
+doorWallShape.lineTo(halfInner, 0);
+doorWallShape.lineTo(halfInner, HEIGHT_RIGHT);
+doorWallShape.lineTo(-halfInner, HEIGHT_LEFT);
+doorWallShape.closePath();
+
+const doorLeftX = -halfInner + 0.6;
+const doorRightX = doorLeftX + DOOR_WIDTH;
+const doorBottomY = WALL_THICKNESS;
+const doorTopY = doorBottomY + DOOR_HEIGHT;
+
+const doorHole = new THREE.Path();
+doorHole.moveTo(doorLeftX, doorBottomY);
+doorHole.lineTo(doorRightX, doorBottomY);
+doorHole.lineTo(doorRightX, doorTopY);
+doorHole.lineTo(doorLeftX, doorTopY);
+doorHole.closePath();
+doorWallShape.holes.push(doorHole);
+
+const doorSlopedWallGeo = new THREE.ExtrudeGeometry(doorWallShape, {
+  depth: WALL_THICKNESS,
+  bevelEnabled: false
+});
+
+// Front Wall (+Z) — Has the 2m doorway opening on the 5m side
+const frontWallZ = ROOM_SIZE / 2 - WALL_THICKNESS;
+addMeshWithEdges(doorSlopedWallGeo, wallMat, 0, 0, frontWallZ);
+
+// 5. Opened Door Leaf hinged at the doorway on the Front Wall (+Z)
+const doorPivot = new THREE.Group();
+doorPivot.position.set(doorLeftX, doorBottomY, frontWallZ + WALL_THICKNESS / 2);
+doorPivot.rotation.y = Math.PI * 0.42;
+
+const doorPanelGeo = new THREE.BoxGeometry(DOOR_WIDTH, DOOR_HEIGHT, DOOR_THICKNESS);
+doorPanelGeo.translate(DOOR_WIDTH / 2, DOOR_HEIGHT / 2, 0);
+addMeshWithEdges(doorPanelGeo, doorMat, 0, 0, 0, doorPivot);
+
+roomGroup.add(doorPivot);
 
 // ==========================================
 // 5. INTERACTIVE SENSOR NODES (CLOUD-SYNCED)
@@ -337,8 +388,8 @@ function createSensorNode(id, label, geometry, position, initialOn = true) {
   return sensors[id];
 }
 
-// 1. Humidity Sensor (Left Wall)
-const humidityPos = new THREE.Vector3(-BOX_WIDTH / 2 + 0.35, 3.6, -1.2);
+// 1. Humidity Sensor (Mounted on 5m Left Wall)
+const humidityPos = new THREE.Vector3(-ROOM_SIZE / 2 + 0.35, 3.8, -1.5);
 createSensorNode(
   'humidity',
   'HUMIDITY SENSOR',
@@ -347,8 +398,8 @@ createSensorNode(
   true
 );
 
-// 2. Gas Sensor (Back Wall)
-const gasPos = new THREE.Vector3(0.8, 3.8, -BOX_LENGTH / 2 + 0.35);
+// 2. Gas Sensor (Mounted on Solid Sloped Back Wall)
+const gasPos = new THREE.Vector3(0.8, 3.6, -ROOM_SIZE / 2 + 0.35);
 createSensorNode(
   'gas',
   'GAS SENSOR',
@@ -357,8 +408,8 @@ createSensorNode(
   true
 );
 
-// 3. Proximity Sensor (Right Wall)
-const proximityPos = new THREE.Vector3(BOX_WIDTH / 2 - 0.35, 2.4, 1.2);
+// 3. Proximity Sensor (Mounted on 4m Right Wall)
+const proximityPos = new THREE.Vector3(ROOM_SIZE / 2 - 0.35, 2.6, 1.5);
 createSensorNode(
   'proximity',
   'PROXIMITY SENSOR',
@@ -377,17 +428,14 @@ function applySensorVisuals(id, isOn) {
   sensor.isOn = isOn;
   const stateText = isOn ? 'ON' : 'OFF';
 
-  // 1. Update 3D node color
   sensor.coreMat.color.setHex(isOn ? PALETTE.statusOn : PALETTE.statusOff);
 
-  // 2. Update floating 3D label badge
   if (sensor.labelElement) {
     sensor.labelElement.classList.toggle('state-on', isOn);
     sensor.labelElement.classList.toggle('state-off', !isOn);
     sensor.labelElement.querySelector('.label-text').textContent = `${sensor.label}: ${stateText}`;
   }
 
-  // 3. Update left sidebar RT box
   const rtDot = document.getElementById(`rt-dot-${id}`);
   const rtVal = document.getElementById(`rt-val-${id}`);
   if (rtDot) {
@@ -404,7 +452,6 @@ function setSensorState(id, targetState, source = '3D Node') {
   const sensor = sensors[id];
   if (!sensor) return;
 
-  // Update local UI immediately for zero lag
   applySensorVisuals(id, targetState);
 
   const stateText = targetState ? 'ON' : 'OFF';
@@ -414,7 +461,6 @@ function setSensorState(id, targetState, source = '3D Node') {
     targetState ? 'on' : 'off'
   );
 
-  // Sync to Firebase database
   set(ref(db, `sensors/${id}`), targetState).catch((error) => {
     console.error("Firebase sync error:", error);
   });
@@ -426,7 +472,6 @@ function toggleSensor(id, source = '3D Node') {
   setSensorState(id, !sensor.isOn, source);
 }
 
-// Listen for real-time sensor state changes from Firebase across all connected devices
 onValue(sensorsRef, (snapshot) => {
   const data = snapshot.val();
 
@@ -446,14 +491,12 @@ onValue(sensorsRef, (snapshot) => {
   });
 });
 
-// Left sidebar RT boxes click handler
 document.querySelectorAll('.rt-box[data-sensor]').forEach((box) => {
   box.addEventListener('click', () => {
     toggleSensor(box.dataset.sensor, 'Sidebar');
   });
 });
 
-// "Wakey Wakey" Button: Turns all nodes ON in the cloud
 const wakeyBtn = document.getElementById('wakey-btn');
 if (wakeyBtn) {
   wakeyBtn.addEventListener('click', () => {
@@ -469,7 +512,7 @@ if (wakeyBtn) {
 // ==========================================
 const roomLabelEl = document.createElement('div');
 roomLabelEl.className = 'floating-label';
-roomLabelEl.textContent = 'ZONE 01 (5x5x5)';
+roomLabelEl.textContent = 'ZONE 01 (8x8m · 5m→4m)';
 labelsContainer.appendChild(roomLabelEl);
 
 const trackedLabels = [
